@@ -1,0 +1,6 @@
+# handle_basket: backend, checkpoint pin (hf_repo + revision + subfolder), overrides, helper.
+# Listed in deploy_policy.yml task_policies as {config: configs/handle_basket.yml}.
+backend: ofi                         # preliminary checkpoint
+hf_repo: liyifreddy/RSC-MyPolicy-checkpoints
+revision: ce0b27eb374a0ae4fdf0130c0a9412aa885f2c2d
+subfolder: handle_basket_mix34

@@ -1,0 +1,60 @@
+{
+ "task": "bell",
+ "split": "ep",
+ "gates": {
+  "cam_high|button.cover_top": {
+   "tau": 0.37100258469581604,
+   "src": "这一组合定",
+   "n": 125
+  },
+  "cam_left_wrist|button.cover_top": {
+   "tau": 0.43345412611961365,
+   "src": "这一组合定",
+   "n": 49
+  },
+  "cam_right_wrist|button.cover_top": {
+   "tau": 0.4053567349910736,
+   "src": "这一组合定",
+   "n": 37
+  }
+ },
+ "sim_wrong_object": {
+  "given": 220,
+  "given_true_vis": 211,
+  "far_from_target": 4,
+  "on_other": 0,
+  "on_other_dis": 0,
+  "on_other_kp": 0,
+  "unknown_others": 0,
+  "false_pass_on_other": 0
+ },
+ "sim_gated_acc": {
+  "med_px": 6.7,
+  "p90_px": 14.7
+ },
+ "real": {
+  "button.cover_top": {
+   "perframe": {
+    "given": 1847,
+    "frames": 3906,
+    "jumps": 84,
+    "back": 35,
+    "mem": 0
+   },
+   "track": {
+    "given": 1814,
+    "frames": 3906,
+    "jumps": 51,
+    "back": 15,
+    "mem": 0
+   },
+   "track_mem": {
+    "given": 2281,
+    "frames": 3906,
+    "jumps": 23,
+    "back": 2,
+    "mem": 528
+   }
+  }
+ }
+}

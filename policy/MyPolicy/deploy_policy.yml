@@ -1,0 +1,111 @@
+# MyPolicy (finals) evaluation configuration
+# bash policy/MyPolicy/eval.sh <task_name> <setting> [checkpoint_path|auto] [gpu_id] [extra_opts...]
+
+# ------------------------------------------------------------------
+# Basic experiment configuration (Each policy must be retained.)
+# Same keys as the official policy/Your_Policy/deploy_policy.yml.
+# ------------------------------------------------------------------
+policy_name: MyPolicy
+task_name: null
+setting: null
+model_name: null
+seed: 0
+max_episodes: 20
+max_steps: 1000          # FAQ #13: 1000 steps per task on the real robot
+headless: true
+pytorch_device: cuda
+gpu_id: 0
+filter_dataset_saving: true
+eval_video_log: false
+eval_video_obs_keys:
+  - cam_high
+  - cam_right_wrist
+  - cam_left_wrist
+eval_expert_check: true
+checkpoint_path: auto
+
+# ------------------------------------------------------------------
+# Action post-processing at the exit (action_post.py), every task, every backend.
+# FAQ #16: the SDK sends our actions as they are (no limiting), so we clip here.
+# ------------------------------------------------------------------
+action_post:
+  enabled: true
+  # Finals default: the official simulator URDF at pin 45d9b9c, every
+  # joint side pulled in by 1.5 deg; J2 lower / J3 upper are the mechanical zero
+  # and keep margin 0. Over-limit commands are clipped here, so the SDK never
+  # receives an out-of-range target and does not drop a command.
+  #   J1 +-148.500351 deg, J2 0..178.408748, J3 -168.496578..0,
+  #   J4 +-98.481135, J5 +-72.984513, J6 +-169.699789
+  # Other profiles, explicit reproduction / comparison runs only:
+  #   deploy_margin: J1-J3 as the official URDF; J4 +-103, J5 +-74.5, J6 +-160 deg
+  #     (the earlier deploy clip; its J6 +-160 is NOT the finals default)
+  #   real_hard: J4 +-105, J5 +-75, J6 +-171.2 deg (real mechanical envelope)
+  #   official_sim: the unmodified 45d9b9c simulator URDF (J5 +-74.48 deg)
+  clip_profile: executable
+  custom_limits: null            # [[lo, hi] x 6] rad, overrides clip_profile when set
+  gripper_src_range: [0.0, 1.0]  # model gripper units -> 0-1 (identity: sim and real data are both 0-1)
+  gripper_clip: true             # gripper sent in [0, 1]; real side converts 0-1 x 0.05 m per finger
+  # linear = the model's 0-1 command goes out as is (real gripper is linear).
+  # binary / hysteresis turn it into a switch (tasks where the sim gripper acts
+  # like a switch); hysteresis 0.15 -> 0.81 = the preliminary 15 -> 81 on 0-100,
+  # starts each episode OPEN; binary opens at hi (set hi: 0.5 for ordinary
+  # binarization). Neither can be combined with max_step_grip (parse_cfg errors).
+  gripper_mode: linear
+  gripper_hyst: {lo: 0.15, hi: 0.81}
+  max_step_rad: null             # optional per-step arm change limit, rad (null = off)
+  max_step_grip: null            # optional per-step gripper change limit, 0-1 (null = off)
+  # gripper_clip false is an explicit opt-out: values can then leave [0, 1].
+  log_dir: ""                    # "" = <eval_result_dir>/<task>/action_post_<time>_<pid>.jsonl
+  log_every_event: true
+  warn_arm_clip_steps: 20
+
+# ------------------------------------------------------------------
+# Backends (module path; each has get_model / eval / reset_model [/ close_model])
+# ------------------------------------------------------------------
+backends:
+  ofi: policy.MyPolicy.backends.ofi      # One from Infinity (preliminary delivery, ofi/ byte-identical to b50f70a)
+  hold: policy.MyPolicy.backends.hold    # holds the current qpos; plumbing tests and rehearsal only, no model
+
+# ------------------------------------------------------------------
+# Which backend runs each task (10 finals tasks; open_pan is not evaluated, FAQ #05).
+# Keys other than backend / overrides are passed to the backend (checkpoint location).
+# As in the preliminary delivery, every task runs its hf_repo at exactly `revision`
+# (40-character commit) and `subfolder`, read from the local Hugging Face cache filled by
+# prefetch.py (README Setup step 5); the evaluation itself does not download. Every OfI
+# checkpoint directory holds an ofi_checkpoint.json naming its files with their sha256.
+#   finals_1115/<task>/  checkpoints trained for the finals (our simulated data, 10 Hz)
+#   <task>/ (top level)  the preliminary-delivery checkpoints, unchanged
+# ------------------------------------------------------------------
+task_policies:
+  click_bell: {config: configs/click_bell.yml}
+  drawer_open_place: {config: configs/drawer_open_place.yml}
+  handle_basket: {config: configs/handle_basket.yml}
+  item_assembly: {config: configs/item_assembly.yml}
+  items_handover: {config: configs/items_handover.yml}
+  manipulate_pipette: {config: configs/manipulate_pipette.yml}
+  mixer_operating: {config: configs/mixer_operating.yml}
+  sample_loading: {config: configs/sample_loading.yml}
+  table_rearrangement: {config: configs/table_rearrangement.yml}
+  water_pouring: {config: configs/water_pouring.yml}
+
+# ------------------------------------------------------------------
+# OfI backend parameters (ofi/ofi_backend.py, unchanged from the preliminary delivery)
+# ------------------------------------------------------------------
+ofi_python: ""            # empty = OFI_PYTHON (eval.sh falls back to <workspace>/ofi_env)
+ofi_src_root: ""          # empty = OFI_SRC_ROOT (eval.sh falls back to <workspace>/ofi_src)
+ofi_backbone:             # frozen V-JEPA 2.1 ViT-L/16 384 encoder (pinned like the preliminary delivery)
+  hf_repo: liyifreddy/RSC-MyPolicy-checkpoints
+  revision: 624c9dc4149c1935190d4af75f9be1938fb0f141
+  file: shared/vjepa2_1_vitl_384_ema_encoder.pt
+  sha256: 49231ae6951961715ccdf993aadd755b8d5f27864e130b1129bef0305e0edcf0
+ofi_mixed_precision: "no"
+ofi_num_inference_steps: 10
+ofi_replan_steps: 24
+ofi_act_step: 24
+ofi_worker_log: ""
+ofi_left_grip_hyst: null
+ofi_pre_place_correction: null
+
+# hold backend (tests / rehearsal)
+hold_chunk: 10
+hold_offset: null

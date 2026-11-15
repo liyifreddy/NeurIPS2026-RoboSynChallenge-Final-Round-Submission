@@ -1,0 +1,7 @@
+# items_handover: backend, checkpoint pin (hf_repo + revision + subfolder), overrides, helper.
+# Listed in deploy_policy.yml task_policies as {config: configs/items_handover.yml}.
+backend: ofi                         # preliminary checkpoint (the delivered OfI route of the preliminary switch)
+hf_repo: liyifreddy/RSC-MyPolicy-checkpoints
+revision: 624c9dc4149c1935190d4af75f9be1938fb0f141
+subfolder: items_handover
+overrides: {ofi_left_grip_hyst: "on"}

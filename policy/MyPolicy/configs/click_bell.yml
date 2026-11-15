@@ -1,0 +1,18 @@
+# click_bell: backend, checkpoint pin (hf_repo + revision + subfolder), overrides, helper.
+# Listed in deploy_policy.yml task_policies as {config: configs/click_bell.yml}.
+backend: ofi
+hf_repo: liyifreddy/RSC-MyPolicy-checkpoints
+revision: e1793b71f48a5e92b48f2269b041814681da9c58
+subfolder: finals_1115/click_bell
+overrides: {ofi_replan_steps: 32, ofi_act_step: 32}
+# Last-press helper (helpers/click_bell/bell_press.py): takes the pressing arm once, when the hand has
+# stalled above the bell cover, presses, lifts and hands the arm back. enabled: false = off.
+helper:
+  enabled: false           # one switch: false = the helper is not built (behaviour identical to no helper)
+  camera: file             # file = helpers/click_bell/calib (the delivered setting); "sim" reads the simulator camera and is for simulation checks only
+  platform: avg            # helpers/click_bell/calib/platform_<platform>.json (avg = mean of the three platforms)
+  calib_sha256: e1cd3a4b0717e109   # helpers/click_bell/calib/platform_avg.json, checked at start
+  z0: 0.861                # bell cover top height (m) in the calibration world frame
+  head_hf: {hf_repo: liyifreddy/RSC-MyPolicy-checkpoints, revision: 56d1bc0755e1e23958593bfda77b6b93d865e48e, file: finals_1115/bell_kp/head_vjepa.pt}
+  head_sha256: 6630020352c8821d    # checked at start
+  encoder_hf: {hf_repo: liyifreddy/RSC-MyPolicy-checkpoints, revision: 624c9dc4149c1935190d4af75f9be1938fb0f141, file: shared/vjepa2_1_vitl_384_ema_encoder.pt}

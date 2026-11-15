@@ -1,0 +1,3 @@
+# sample_loading: backend, checkpoint pin (hf_repo + revision + subfolder), overrides, helper.
+# Listed in deploy_policy.yml task_policies as {config: configs/sample_loading.yml}.
+backend: undecided                   # not submitted in this version: get_model stops with an error
