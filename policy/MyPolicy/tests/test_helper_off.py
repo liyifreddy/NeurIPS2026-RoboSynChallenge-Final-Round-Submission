@@ -47,9 +47,9 @@ class TestHelperOff(unittest.TestCase):
         cfg["task_policies"]["click_bell"] = entry
         return cfg
 
-    def test_shipped_yml_helper_is_off_and_file_camera(self):
+    def test_shipped_yml_helper_is_on_and_file_camera(self):
         h = TC.task_entry(SK._yml()["task_policies"], "click_bell")["helper"]
-        self.assertIs(h["enabled"], False)
+        self.assertIs(h["enabled"], True)             # delivered on; one switch to turn it off
         self.assertEqual(h["camera"], "file")
         calib = POLICY_DIR / "helpers" / "click_bell" / "calib" / f"platform_{h['platform']}.json"
         self.assertTrue(hashlib.sha256(calib.read_bytes()).hexdigest().startswith(str(h["calib_sha256"])))
