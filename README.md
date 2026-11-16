@@ -51,7 +51,7 @@ All tasks also use the shared V-JEPA 2.1 encoder (`shared/`, `ofi_backbone` in
 A helper is a small rule-based controller for one task. It is switched on or off in that task's
 configuration file (`helper.enabled`). Enabled in this submission:
 
-- `sample_loading` (`helpers/sample_loading/sample_search.py`): when the left gripper holds the tube above the rack and the policy starts to open it, the helper takes the left arm, lowers the tube until it meets resistance, searches for the hole in a small spiral, pushes the tube in, opens the gripper slowly and hands the arm back. It acts at most once per episode and always hands back before the episode ends.
+- `sample_loading` (`helpers/sample_loading/sample_search.py`): when the policy starts to open the gripper above the rack, the helper takes the left arm and holds the tube. It lowers the tube until it meets resistance (or has descended 20 mm), then opens the gripper slowly, lifts the hand and hands the arm back. A spiral hole search is implemented but was not triggered in our evaluation episodes. The helper acts at most once per episode and always hands back before the episode ends.
 
 Helpers read only the observation the evaluation provides: the joint readings (`robot/qpos`) and
 camera images. The `sample_loading` helper uses the top camera (`cam_high`) once at the start to
