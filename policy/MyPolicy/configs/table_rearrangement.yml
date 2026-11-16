@@ -1,6 +1,6 @@
 # table_rearrangement: backend, checkpoint pin (hf_repo + revision + subfolder), overrides, helper.
 # Listed in deploy_policy.yml task_policies as {config: configs/table_rearrangement.yml}.
 backend: ofi
-hf_repo: liyifreddy/RSC-MyPolicy-checkpoints
-revision: e1793b71f48a5e92b48f2269b041814681da9c58
-subfolder: finals_1115/table_rearrangement
+hf_repo: liyifreddy/RSC-finals-checkpoints
+revision: b0979b720546f112dfc05c78a718d83a14df96c4
+subfolder: table_rearrangement/student

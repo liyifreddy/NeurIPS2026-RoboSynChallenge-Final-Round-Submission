@@ -6,8 +6,8 @@
 
 As in the preliminary delivery: puts the pinned checkpoint of every OfI task in
 deploy_policy.yml (task_policies -> configs/<task>.yml: hf_repo + revision + subfolder), the pinned V-JEPA
-encoder (ofi_backbone) and, for click_bell, the files its helper names (helper.head_hf,
-helper.encoder_hf) into the local Hugging Face cache, at exactly the pinned revisions.
+encoder (ofi_backbone) and, for every task whose helper is enabled, the files it names (every helper.<name>_hf:
+head_hf, encoder_hf, tip_head_hf) into the local Hugging Face cache, at exactly the pinned revisions.
 This is the only place that downloads: the evaluation only reads the cache and stops with
 an error if anything is missing. Every OfI checkpoint is checked against the sha256 in its
 ofi_checkpoint.json, the encoder against deploy_policy.yml. Respects HF_HOME, HF_ENDPOINT
@@ -44,7 +44,9 @@ def main():
             continue
         todo.append(("checkpoint", t, e))
         h = e.get("helper") or {}
-        for key in ("head_hf", "encoder_hf"):
+        if not h.get("enabled", False):   # a switched-off helper is not built, so its files are not needed
+            h = {}
+        for key in [k for k in h if k.endswith("_hf")]:   # head_hf, encoder_hf, tip_head_hf, ...
             if h.get(key):
                 todo.append(("file", f"{t} helper {key}", h[key]))
     bb = cfg.get("ofi_backbone") or {}

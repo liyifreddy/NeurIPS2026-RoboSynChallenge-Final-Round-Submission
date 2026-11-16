@@ -94,8 +94,8 @@ task_policies:
 ofi_python: ""            # empty = OFI_PYTHON (eval.sh falls back to <workspace>/ofi_env)
 ofi_src_root: ""          # empty = OFI_SRC_ROOT (eval.sh falls back to <workspace>/ofi_src)
 ofi_backbone:             # frozen V-JEPA 2.1 ViT-L/16 384 encoder (pinned like the preliminary delivery)
-  hf_repo: liyifreddy/RSC-MyPolicy-checkpoints
-  revision: 624c9dc4149c1935190d4af75f9be1938fb0f141
+  hf_repo: liyifreddy/RSC-finals-checkpoints
+  revision: b0979b720546f112dfc05c78a718d83a14df96c4
   file: shared/vjepa2_1_vitl_384_ema_encoder.pt
   sha256: 49231ae6951961715ccdf993aadd755b8d5f27864e130b1129bef0305e0edcf0
 ofi_mixed_precision: "no"

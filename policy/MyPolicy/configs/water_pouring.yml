@@ -1,6 +1,9 @@
 # water_pouring: backend, checkpoint pin (hf_repo + revision + subfolder), overrides, helper.
 # Listed in deploy_policy.yml task_policies as {config: configs/water_pouring.yml}.
-backend: ofi                         # preliminary checkpoint
-hf_repo: liyifreddy/RSC-MyPolicy-checkpoints
-revision: 624c9dc4149c1935190d4af75f9be1938fb0f141
-subfolder: water_pouring
+backend: ofi
+hf_repo: liyifreddy/RSC-finals-checkpoints
+revision: b0979b720546f112dfc05c78a718d83a14df96c4
+subfolder: water_pouring/student
+# Helper (helpers/water_pouring/): none in this version. enabled: false = off.
+helper:
+  enabled: false

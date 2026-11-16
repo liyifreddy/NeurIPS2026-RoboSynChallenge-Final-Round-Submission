@@ -47,12 +47,29 @@ class TestHelperOff(unittest.TestCase):
         cfg["task_policies"]["click_bell"] = entry
         return cfg
 
-    def test_shipped_yml_helper_is_on_and_file_camera(self):
+    def test_shipped_yml_helper_is_off_and_file_camera(self):
         h = TC.task_entry(SK._yml()["task_policies"], "click_bell")["helper"]
-        self.assertIs(h["enabled"], True)             # delivered on; one switch to turn it off
+        self.assertIs(h["enabled"], False)            # delivered off (总-580); one switch to turn it on
         self.assertEqual(h["camera"], "file")
         calib = POLICY_DIR / "helpers" / "click_bell" / "calib" / f"platform_{h['platform']}.json"
         self.assertTrue(hashlib.sha256(calib.read_bytes()).hexdigest().startswith(str(h["calib_sha256"])))
+
+    def test_every_shipped_helper_is_off_and_names_resolve(self):
+        import ast
+        cfg = SK._yml()
+        for t in cfg["task_policies"]:
+            h = TC.task_entry(cfg["task_policies"], t).get("helper")
+            if h is None:
+                continue
+            self.assertIs(h["enabled"], False, t)
+            if "module" not in h:
+                continue
+            folder = HERE.parent / "helpers" / t
+            for mod, name in ((h["module"], h["class"]),
+                              tuple(h["env_class"].rsplit(".", 1)) if "." in h["env_class"] else (h["module"], h["env_class"])):
+                src = (folder / f"{mod}.py").read_text()
+                names = {n.name for n in ast.parse(src).body if isinstance(n, ast.ClassDef)}
+                self.assertIn(name, names, f"{t}: {mod}.{name}")
 
     def test_off_equals_no_helper_bitwise(self):
         shipped = TC.task_entry(SK._yml()["task_policies"], "click_bell")["helper"]

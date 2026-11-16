@@ -1,6 +1,6 @@
 # drawer_open_place: backend, checkpoint pin (hf_repo + revision + subfolder), overrides, helper.
 # Listed in deploy_policy.yml task_policies as {config: configs/drawer_open_place.yml}.
 backend: ofi
-hf_repo: liyifreddy/RSC-MyPolicy-checkpoints
-revision: e1793b71f48a5e92b48f2269b041814681da9c58
-subfolder: finals_1115/drawer_open_place
+hf_repo: liyifreddy/RSC-finals-checkpoints
+revision: b0979b720546f112dfc05c78a718d83a14df96c4
+subfolder: drawer_open_place/student

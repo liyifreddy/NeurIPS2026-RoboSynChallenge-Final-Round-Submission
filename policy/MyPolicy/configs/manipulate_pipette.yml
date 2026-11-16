@@ -1,6 +1,6 @@
 # manipulate_pipette: backend, checkpoint pin (hf_repo + revision + subfolder), overrides, helper.
 # Listed in deploy_policy.yml task_policies as {config: configs/manipulate_pipette.yml}.
-backend: ofi                         # preliminary checkpoint
-hf_repo: liyifreddy/RSC-MyPolicy-checkpoints
-revision: 624c9dc4149c1935190d4af75f9be1938fb0f141
-subfolder: manipulate_pipette
+backend: ofi
+hf_repo: liyifreddy/RSC-finals-checkpoints
+revision: b0979b720546f112dfc05c78a718d83a14df96c4
+subfolder: manipulate_pipette/student

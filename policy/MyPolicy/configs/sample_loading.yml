@@ -1,3 +1,16 @@
 # sample_loading: backend, checkpoint pin (hf_repo + revision + subfolder), overrides, helper.
 # Listed in deploy_policy.yml task_policies as {config: configs/sample_loading.yml}.
-backend: undecided                   # not submitted in this version: get_model stops with an error
+backend: ofi
+hf_repo: liyifreddy/RSC-finals-checkpoints
+revision: b0979b720546f112dfc05c78a718d83a14df96c4
+subfolder: sample_loading/student
+# Hole-finding helper (helpers/sample_loading/sample_search.py): takes the left arm when the student opens the
+# gripper over the rack with the tube held, finds the hole and pushes the tube in, then hands back. enabled: false = off.
+helper:
+  enabled: false           # one switch: false = the helper is not built (behaviour identical to no helper)
+  module: sample_search
+  class: SampleSearch
+  env_class: sample_hold.SampleHelperEnv
+  platform: avg            # helpers/sample_loading/calib/platform_<platform>.json
+  calib_sha256: e1cd3a4b0717e109
+  head_sha256: c45cbdbc81f19a1a

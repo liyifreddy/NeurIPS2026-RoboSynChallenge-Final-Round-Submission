@@ -29,47 +29,71 @@ import sys
 
 from .action_post import ActionPost, GuardedEnv, default_log_path, parse_cfg
 from .task_config import task_entry
+from . import wrist_blank as _wb
 
 POLICY_NAME = "MyPolicy"
 # Keys of a task entry that are routing information, not backend arguments.
-_ROUTE_KEYS = ("backend", "overrides", "helper")
+_ROUTE_KEYS = ("backend", "overrides", "helper", "wrist_blank")
 
 
 class RoutedModel:
-    __slots__ = ("backend", "inner", "task", "backend_name", "post", "seed_pending", "helper")
+    __slots__ = ("backend", "inner", "task", "backend_name", "post", "seed_pending", "helper", "helper_env",
+                 "wrist_blank")
 
-    def __init__(self, backend, inner, task, backend_name, post, helper=None):
+    def __init__(self, backend, inner, task, backend_name, post, helper=None, wrist_blank=None):
         self.backend = backend
         self.inner = inner
         self.task = task
         self.backend_name = backend_name
         self.post = post
         self.seed_pending = True
-        self.helper = helper
+        self.helper, self.helper_env = helper if helper is not None else (None, None)
+        self.wrist_blank = wrist_blank
+
+
+# Per-task helpers live in helpers/<task>/ (each folder self-contained). helper.module / helper.class /
+# helper.env_class name the helper module, its helper class (cfg, log_dir=None) with start_episode /
+# end_episode / observe / act, and its env proxy class (env, helper, obs); the defaults below apply when
+# they are not given.
+_HELPER_DEFAULTS = {
+    "click_bell": ("bell_press", "BellPress", "BellHelperEnv"),
+    "sample_loading": ("sample_hold", "SampleHold", "SampleHelperEnv"),
+}
 
 
 def _build_helper(task, entry, log_path):
-    """task_policies.<task>.helper: {enabled: true, ...}; absent or enabled false = no helper (unchanged behaviour)."""
+    """task_policies.<task>.helper: {enabled: true, ...}; absent or enabled false = no helper (unchanged behaviour).
+    Returns (helper, env_class) or None."""
     cfg = entry.get("helper") or {}
     if not cfg.get("enabled", False):
         return None
-    if task != "click_bell":
-        raise ValueError(f"helper is only implemented for click_bell, not {task!r}")
-    from .helpers.click_bell.bell_press import BellPress
+    d_mod, d_cls, d_env = _HELPER_DEFAULTS.get(task, (None, None, None))
+    mod_name, cls_name, env_name = cfg.get("module", d_mod), cfg.get("class", d_cls), cfg.get("env_class", d_env)
+    if not (mod_name and cls_name and env_name):
+        raise ValueError(f"{task}: helper enabled but helper.module / class / env_class not given")
+    import importlib
+
     from .ofi import checkpoints as _ck
 
+    mod = importlib.import_module(f"{__package__}.helpers.{task}.{mod_name}")
     # head_hf / encoder_hf: {hf_repo, revision, file} pinned like the OfI checkpoints, read from the
     # local Hugging Face cache filled by prefetch.py (the evaluation does not download); the helper
     # then gets plain file paths in head / encoder and checks the head sha256 itself.
-    cfg = dict(cfg)
-    for key, what in (("head", "bell helper head"), ("encoder", "bell helper encoder")):
-        hub = cfg.get(f"{key}_hf")
+    cfg = {k: v for k, v in cfg.items() if k not in ("module", "class", "env_class")}
+    for k in [k for k in cfg if k.endswith("_hf")]:   # head_hf, encoder_hf, tip_head_hf, ... -> head, encoder, tip_head
+        hub, key = cfg.pop(k), k[:-3]
         if hub:
-            cfg[key] = _ck.require_hub_file(hub["hf_repo"], str(hub["revision"]), hub["file"], what)
+            cfg[key] = _ck.require_hub_file(hub["hf_repo"], str(hub["revision"]), hub["file"], f"{task} helper {key}")
     log_dir = cfg.get("log_dir") or (os.path.dirname(log_path) if log_path else None)
-    h = BellPress(cfg, log_dir=log_dir)
-    print(f"[{POLICY_NAME}] helper=bell_press platform={h.c['platform']} z0={h.c['z0']} log_dir={log_dir}", flush=True)
-    return h
+    h = getattr(mod, cls_name)(cfg, log_dir=log_dir)
+    if "." in env_name:   # e.g. sample_hold.SampleHelperEnv: the env proxy lives in another module of the same folder
+        env_mod, env_name = env_name.rsplit(".", 1)
+        env_cls = getattr(importlib.import_module(f"{__package__}.helpers.{task}.{env_mod}"), env_name)
+    else:
+        env_cls = getattr(mod, env_name)
+    c = getattr(h, "c", {}) or {}
+    print(f"[{POLICY_NAME}] helper={mod_name} platform={c.get('platform')} z0={c.get('z0')} log_dir={log_dir}", flush=True)
+    return h, env_cls
 
 
 def _task_entry(usr_args):
@@ -107,7 +131,10 @@ def get_model(usr_args):
     backend = importlib.import_module(backends[backend_name])
     inner = backend.get_model(usr_args)
     helper = _build_helper(task, entry, log_path)
-    return RoutedModel(backend, inner, task, backend_name, post, helper)
+    wb = _wb.enabled(entry)
+    if wb:
+        print(f"[{POLICY_NAME}] wrist_blank={wb}: the student gets {wb} wrist images (top view unchanged)", flush=True)
+    return RoutedModel(backend, inner, task, backend_name, post, helper, wb)
 
 
 def _episode_seed(env):
@@ -128,9 +155,11 @@ def eval(env, model, obs):
     genv = GuardedEnv(env, model.post, obs)
     if model.helper is not None:
         # outside GuardedEnv: the helper's action still goes through action_post
-        from .helpers.click_bell.bell_press import BellHelperEnv
-
-        genv = BellHelperEnv(genv, model.helper, obs)
+        genv = model.helper_env(genv, model.helper, obs)
+    if model.wrist_blank:
+        # outermost, next to the backend: only the student sees black wrist images
+        return model.backend.eval(_wb.BlankWristEnv(genv, model.wrist_blank), model.inner,
+                                  _wb.blank_obs(obs, model.wrist_blank))
     return model.backend.eval(genv, model.inner, obs)
 
 

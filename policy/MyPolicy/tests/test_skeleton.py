@@ -394,7 +394,8 @@ class TestRouter(unittest.TestCase):
 
     def test_undecided_and_unknown(self):
         cfg = _yml()
-        cfg["task_name"] = "sample_loading"          # not submitted: backend undecided
+        cfg["task_policies"]["sample_loading"] = {"backend": "undecided"}
+        cfg["task_name"] = "sample_loading"          # a task marked undecided stops with an error
         with self.assertRaises(ValueError):
             DP.get_model(dict(cfg))
         cfg["task_name"] = "drawer_open_place"       # OfI, but its pinned checkpoint is not in this machine's cache

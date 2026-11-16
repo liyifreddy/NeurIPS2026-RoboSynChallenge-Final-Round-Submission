@@ -1,0 +1,53 @@
+{
+ "task": "sample_rack",
+ "kp_names": [
+  "rack._holes_mean",
+  "rack.origin"
+ ],
+ "n_hold_img": 654,
+ "n_hold_seeds": 24,
+ "gates": {
+  "cam_high|rack._holes_mean": {
+   "tau": 0.004243837203830481,
+   "n": 218,
+   "src": "这一组合定",
+   "med_px": 6.2,
+   "p90_px": 18.8,
+   "pass_rate_of_vis": 1.0,
+   "false_pass": 0
+  },
+  "cam_high|rack.origin": {
+   "tau": 0.004250478930771351,
+   "n": 218,
+   "src": "这一组合定",
+   "med_px": 6.3,
+   "p90_px": 18.8,
+   "pass_rate_of_vis": 1.0,
+   "false_pass": 0
+  },
+  "cam_left_wrist|rack._holes_mean": {
+   "tau": null,
+   "n": 53,
+   "src": "停用（最高一档也压不到 p90 ≤ 20 px）"
+  },
+  "cam_left_wrist|rack.origin": {
+   "tau": 0.029616579599678516,
+   "n": 22,
+   "src": "这一组合定",
+   "med_px": 16.0,
+   "p90_px": 19.6,
+   "pass_rate_of_vis": 0.32,
+   "false_pass": 10
+  },
+  "cam_right_wrist|rack._holes_mean": {
+   "tau": null,
+   "n": 6,
+   "src": "停用（留出可见点不足 8）"
+  },
+  "cam_right_wrist|rack.origin": {
+   "tau": null,
+   "n": 9,
+   "src": "停用（最高一档也压不到 p90 ≤ 20 px）"
+  }
+ }
+}

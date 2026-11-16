@@ -1,9 +1,5 @@
 # MyPolicy (finals)
 
-> Finals submission, first version (2026-11-15). `sample_loading` is not submitted in this
-> version (its preliminary route needed the simulator's planner, which the real-robot
-> evaluation does not provide).
-
 Everything we add is inside `policy/MyPolicy/` (FAQ #37). It is based on the final
 version of RoboSynChallenge (pinned `45d9b9c`; tested so far on `a485f91`, which
 differs only in the J5 URDF limit) and uses the official adapter interface: `eval.sh`,
@@ -62,11 +58,15 @@ gripper]`, FAQ #15).
 `v0.2.4.post1`, following the official installation guide. This directory then
 contains `RoboSynChallenge/` (and `EmbodiChain/`).
 
-**2. Our policy.** Copy `MyPolicy/` into `RoboSynChallenge/policy/` (nothing else in
-`policy/` is changed or needed from us; `policy/act` is the official one).
+**2. Our policy.** Copy this repository's whole `policy/` tree into `RoboSynChallenge/policy/`:
+`policy/MyPolicy` (ours) and `policy/act` (the official ACT adapter, identical to RoboSynChallenge
+`45d9b9c`; our policy runs in its environment).
 
-**3. Simulator / adapter environment** (official ACT environment, CUDA 12.8 PyTorch):
+**3. Simulator / adapter environment** (official ACT environment, CUDA 12.8 PyTorch). Use uv's own
+Python (`UV_PYTHON_PREFERENCE=only-managed`): a system Python without development headers cannot build
+`toppra` from source.
 ```bash
+export UV_PYTHON_PREFERENCE=only-managed
 (cd RoboSynChallenge/policy/act && uv sync)
 uv pip install --python RoboSynChallenge/policy/act/.venv/bin/python \
     -c RoboSynChallenge/policy/MyPolicy/locks/act_env.txt \
@@ -92,7 +92,7 @@ export OFI_SRC_ROOT=$PWD/ofi_src
 it in `deploy_policy.yml` (`task_policies`: Hugging Face repository + 40-character revision +
 subfolder), read from the local Hugging Face cache; the evaluation downloads nothing.
 Fill the cache once with an account that has access to the gated repository
-`liyifreddy/RSC-MyPolicy-checkpoints`:
+`liyifreddy/RSC-finals-checkpoints`:
 ```bash
 hf auth login
 (cd RoboSynChallenge && policy/act/.venv/bin/python policy/MyPolicy/prefetch.py)
@@ -122,10 +122,13 @@ bash policy/MyPolicy/eval.sh item_assembly random auto 0
 bash policy/MyPolicy/eval.sh items_handover random auto 0
 bash policy/MyPolicy/eval.sh manipulate_pipette random auto 0
 bash policy/MyPolicy/eval.sh mixer_operating random auto 0
+bash policy/MyPolicy/eval.sh sample_loading random auto 0
 bash policy/MyPolicy/eval.sh table_rearrangement random auto 0
 bash policy/MyPolicy/eval.sh water_pouring random auto 0
 ```
 Further options (e.g. `--max_episodes 20`) go to the official `scripts/eval_policy.py`.
+We evaluated with `eval_reset_sync_steps = 0` (the default of `scripts/eval_policy.py`; our
+`deploy_policy.yml` does not set it).
 The evaluation downloads nothing.
 
 ## Timing
