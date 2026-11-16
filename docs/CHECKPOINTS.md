@@ -24,6 +24,5 @@ real-robot mounting angle; the real robot was not tested. The shared encoder is
 ## Why the weights are on Hugging Face
 
 GitHub holds the code only. The organizers asked for models on Hugging Face, and the encoder alone is
-above GitHub's file size limit. If the repository is gated for you, please request access with the
-account you use for the evaluation. The evaluation itself downloads nothing; run `prefetch.py` once
-before it.
+above GitHub's file size limit. Weights are gated; authenticated access is granted to the
+RoboSynChallenge account. The evaluation itself downloads nothing; run `prefetch.py` once before it.

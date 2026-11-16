@@ -94,7 +94,8 @@ Full commands: [`policy/MyPolicy/README.md`](policy/MyPolicy/README.md), Setup 1
 4. Model worker: a Python 3.10 environment from `policy/MyPolicy/ofi/locks/ofi_worker.txt`
    (PyTorch 2.7.1+cu128, `--no-deps`), plus RoboActualizer `85b9dc6` and vjepa2 `204698b`.
    Set `OFI_PYTHON` and `OFI_SRC_ROOT`.
-5. Weights, one command (with a Hugging Face account that can read the repository):
+5. Weights, one command (log in to Hugging Face first; weights are gated, and authenticated access is
+   granted to the RoboSynChallenge account):
    ```bash
    cd RoboSynChallenge
    policy/act/.venv/bin/python policy/MyPolicy/prefetch.py
