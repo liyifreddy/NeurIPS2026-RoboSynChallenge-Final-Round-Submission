@@ -2,7 +2,7 @@
 # Listed in deploy_policy.yml task_policies as {config: configs/sample_loading.yml}.
 backend: ofi
 hf_repo: liyifreddy/RSC-finals-checkpoints
-revision: 3150e66085c0df112ed2dd91aa5635dd7ee04717
+revision: 63c52ab2064d60584c679933460448f1a493da3b
 subfolder: sample_loading/student
 # Hole-finding helper (helpers/sample_loading/sample_search.py): takes the left arm when the student opens the
 # gripper over the rack with the tube held, finds the hole and pushes the tube in, then hands back. enabled: false = off.
@@ -14,5 +14,5 @@ helper:
   platform: avg            # helpers/sample_loading/calib/platform_<platform>.json
   calib_sha256: e1cd3a4b0717e109
   head_sha256: c45cbdbc81f19a1a
-  head_hf: {hf_repo: liyifreddy/RSC-finals-checkpoints, revision: 3150e66085c0df112ed2dd91aa5635dd7ee04717, file: sample_loading/helper/head.pt}
-  encoder_hf: {hf_repo: liyifreddy/RSC-finals-checkpoints, revision: 3150e66085c0df112ed2dd91aa5635dd7ee04717, file: shared/vjepa2_1_vitl_384_ema_encoder.pt}
+  head_hf: {hf_repo: liyifreddy/RSC-finals-checkpoints, revision: 63c52ab2064d60584c679933460448f1a493da3b, file: sample_loading/helper/head.pt}
+  encoder_hf: {hf_repo: liyifreddy/RSC-finals-checkpoints, revision: 63c52ab2064d60584c679933460448f1a493da3b, file: shared/vjepa2_1_vitl_384_ema_encoder.pt}
