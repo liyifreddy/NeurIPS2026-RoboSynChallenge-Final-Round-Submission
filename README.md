@@ -3,6 +3,29 @@
 Thank you to the RoboSynChallenge organizers for the benchmark, the simulator, the released data and
 the real-robot evaluation.
 
+## Quick start / 快速开始
+
+您好，感谢您评测我们的策略！为方便部署，权重无需逐个下载：环境装好后，只需运行下面一条命令，即可一键下载全部权重并自动逐项校验（最后显示 done: N of N 即表示齐全），评测过程中不会再联网下载。详细步骤见 policy/MyPolicy/README.md（Setup 1–6）。如有任何问题，欢迎在本仓提 issue 或联系 Yi Li，非常感谢！
+
+Thank you for evaluating our policy. You do not need to download the weights one by one: after the
+environment is set up, the single command below downloads every pinned file and checks each sha256
+(it ends with "done: N of N"). Nothing is downloaded during evaluation.
+
+```bash
+cd RoboSynChallenge && policy/act/.venv/bin/python policy/MyPolicy/prefetch.py
+```
+
+The weights repository is gated and the RoboSynChallenge account is authorized; please run
+`huggingface-cli login` with that account first.
+
+Setup in short:
+
+1. Official RoboSynChallenge at `45d9b9c` and EmbodiChain `v0.2.4.post1`.
+2. Copy this repository's whole `policy/` tree into `RoboSynChallenge/policy/`.
+3. Official ACT environment (`uv sync` in `policy/act`, `UV_PYTHON_PREFERENCE=only-managed`), then PyTorch 2.7.1+cu128 from `policy/MyPolicy/locks/act_env.txt`.
+4. Model worker environment from `policy/MyPolicy/ofi/locks/ofi_worker.txt`, plus RoboActualizer `85b9dc6` and vjepa2 `204698b`.
+5. The download command above.
+
 This repository holds our policy for the real-robot finals. Everything the evaluation needs is under
 `policy/`:
 
