@@ -22,7 +22,7 @@ Setup in short:
 
 1. Official RoboSynChallenge at `45d9b9c` and EmbodiChain `v0.2.4.post1`.
 2. Copy this repository's whole `policy/` tree into `RoboSynChallenge/policy/`.
-3. Official ACT environment (`uv sync` in `policy/act`, `UV_PYTHON_PREFERENCE=only-managed`), then PyTorch 2.7.1+cu128 from `policy/MyPolicy/locks/act_env.txt`.
+3. Python environment for the simulator and our policy: the official evaluation environment set up in `policy/act` (`uv sync`, `UV_PYTHON_PREFERENCE=only-managed`); then PyTorch 2.7.1+cu128 from `policy/MyPolicy/locks/act_env.txt`. The ACT model itself is not used.
 4. Model worker environment from `policy/MyPolicy/ofi/locks/ofi_worker.txt`, plus RoboActualizer `85b9dc6` and vjepa2 `204698b`.
 5. The download command above.
 
@@ -32,8 +32,10 @@ This repository holds our policy for the real-robot finals. Everything the evalu
 - `policy/MyPolicy/`: our policy. Entry `eval.sh`, `deploy_policy.yml`, `deploy_policy.py`; one
   configuration file per task (`configs/<task>.yml`); per-task helpers (`helpers/<task>/`); the model
   client (`ofi/`). Full setup and file list: [`policy/MyPolicy/README.md`](policy/MyPolicy/README.md).
-- `policy/act/`: the official ACT adapter, unchanged from RoboSynChallenge `45d9b9c`. Our policy runs
-  in the official ACT environment.
+- `policy/act/`: the official ACT adapter, unchanged from RoboSynChallenge `45d9b9c`. We do not use
+  the ACT model. We only reuse the Python environment that this folder sets up (the official evaluation
+  environment, created with `uv sync`), and our policy imports nothing else from it. It is included
+  because the evaluation installs that environment from this folder.
 
 ## Method
 
@@ -86,7 +88,7 @@ read simulator state. Their actions go through the same joint-limit clipping as 
 
 ```
 policy/
-├── act/                     official ACT adapter (unchanged)
+├── act/                     official ACT adapter (unchanged; only its Python environment is used)
 └── MyPolicy/
     ├── eval.sh              entry point (official argument order)
     ├── deploy_policy.yml    official keys, action post-processing, task table, encoder pin
@@ -112,9 +114,10 @@ Full commands: [`policy/MyPolicy/README.md`](policy/MyPolicy/README.md), Setup 1
    ([installation guide](https://edem-ai.github.io/RoboSynChallenge/html/getting_started/installation.html)).
 2. Copy this repository's whole `policy/` tree (`policy/MyPolicy` and `policy/act`) into
    `RoboSynChallenge/policy/`.
-3. Official ACT environment: `export UV_PYTHON_PREFERENCE=only-managed`, then
-   `(cd RoboSynChallenge/policy/act && uv sync)`. Then install PyTorch 2.7.1+cu128 with
-   `policy/MyPolicy/locks/act_env.txt`. The CUDA 12.8 build supports the RTX 5090 (`sm_120`).
+3. Python environment for the simulator and our policy: the official evaluation environment set up
+   in `policy/act` (`export UV_PYTHON_PREFERENCE=only-managed`, then
+   `(cd RoboSynChallenge/policy/act && uv sync)`); then PyTorch 2.7.1+cu128 from
+   `policy/MyPolicy/locks/act_env.txt`. The ACT model itself is not used. The CUDA 12.8 build supports the RTX 5090 (`sm_120`).
 4. Model worker: a Python 3.10 environment from `policy/MyPolicy/ofi/locks/ofi_worker.txt`
    (PyTorch 2.7.1+cu128, `--no-deps`), plus RoboActualizer `85b9dc6` and vjepa2 `204698b`.
    Set `OFI_PYTHON` and `OFI_SRC_ROOT`.

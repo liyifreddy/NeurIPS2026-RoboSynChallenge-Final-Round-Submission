@@ -60,9 +60,9 @@ contains `RoboSynChallenge/` (and `EmbodiChain/`).
 
 **2. Our policy.** Copy this repository's whole `policy/` tree into `RoboSynChallenge/policy/`:
 `policy/MyPolicy` (ours) and `policy/act` (the official ACT adapter, identical to RoboSynChallenge
-`45d9b9c`; our policy runs in its environment).
+`45d9b9c`). We do not use the ACT model; we only reuse the Python environment that `policy/act` sets up.
 
-**3. Simulator / adapter environment** (official ACT environment, CUDA 12.8 PyTorch). Use uv's own
+**3. Python environment for the simulator and our policy**: the official evaluation environment set up in `policy/act`, with CUDA 12.8 PyTorch. The ACT model itself is not used. Use uv's own
 Python (`UV_PYTHON_PREFERENCE=only-managed`): a system Python without development headers cannot build
 `toppra` from source.
 ```bash
