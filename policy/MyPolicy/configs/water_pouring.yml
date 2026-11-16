@@ -2,7 +2,7 @@
 # Listed in deploy_policy.yml task_policies as {config: configs/water_pouring.yml}.
 backend: ofi
 hf_repo: liyifreddy/RSC-finals-checkpoints
-revision: b0979b720546f112dfc05c78a718d83a14df96c4
+revision: 3150e66085c0df112ed2dd91aa5635dd7ee04717
 subfolder: water_pouring/student
 # Helper (helpers/water_pouring/): none in this version. enabled: false = off.
 helper:

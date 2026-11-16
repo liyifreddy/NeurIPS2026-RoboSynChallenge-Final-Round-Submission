@@ -61,7 +61,9 @@ class TestHelperOff(unittest.TestCase):
             h = TC.task_entry(cfg["task_policies"], t).get("helper")
             if h is None:
                 continue
-            self.assertIs(h["enabled"], False, t)
+            self.assertIs(h["enabled"], t == "sample_loading", t)   # 总-604 ①: sample_loading helper delivered on
+            if t == "sample_loading":
+                self.assertIn("head_hf", h)
             if "module" not in h:
                 continue
             folder = HERE.parent / "helpers" / t

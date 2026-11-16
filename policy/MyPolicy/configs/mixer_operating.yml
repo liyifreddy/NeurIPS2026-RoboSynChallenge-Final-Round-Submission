@@ -2,5 +2,5 @@
 # Listed in deploy_policy.yml task_policies as {config: configs/mixer_operating.yml}.
 backend: ofi
 hf_repo: liyifreddy/RSC-finals-checkpoints
-revision: b0979b720546f112dfc05c78a718d83a14df96c4
+revision: 3150e66085c0df112ed2dd91aa5635dd7ee04717
 subfolder: mixer_operating/student
