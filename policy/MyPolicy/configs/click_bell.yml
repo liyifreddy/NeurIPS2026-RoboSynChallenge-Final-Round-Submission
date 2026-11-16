@@ -2,7 +2,7 @@
 # Listed in deploy_policy.yml task_policies as {config: configs/click_bell.yml}.
 backend: ofi
 hf_repo: liyifreddy/RSC-finals-checkpoints
-revision: 63c52ab2064d60584c679933460448f1a493da3b
+revision: 2a395d9680be8466a0a554a8fb888b2a82aada1b
 subfolder: click_bell/student
 overrides: {ofi_replan_steps: 32, ofi_act_step: 32}
 # Last-press helper (helpers/click_bell/bell_press.py): takes the pressing arm once, when the hand has
@@ -13,13 +13,13 @@ helper:
   platform: avg            # helpers/click_bell/calib/platform_<platform>.json (avg = mean of the three platforms)
   calib_sha256: e1cd3a4b0717e109   # helpers/click_bell/calib/platform_avg.json, checked at start
   z0: 0.861                # bell cover top height (m) in the calibration world frame
-  head_hf: {hf_repo: liyifreddy/RSC-finals-checkpoints, revision: 63c52ab2064d60584c679933460448f1a493da3b, file: click_bell/helper/head.pt}
+  head_hf: {hf_repo: liyifreddy/RSC-finals-checkpoints, revision: 2a395d9680be8466a0a554a8fb888b2a82aada1b, file: click_bell/helper/head.pt}
   head_sha256: 6630020352c8821d    # checked at start
-  encoder_hf: {hf_repo: liyifreddy/RSC-finals-checkpoints, revision: 63c52ab2064d60584c679933460448f1a493da3b, file: shared/vjepa2_1_vitl_384_ema_encoder.pt}
+  encoder_hf: {hf_repo: liyifreddy/RSC-finals-checkpoints, revision: 2a395d9680be8466a0a554a8fb888b2a82aada1b, file: shared/vjepa2_1_vitl_384_ema_encoder.pt}
   # Servo mode (compares the fingertip and the bell cover in the same cam_high image; left hand only).
   # Active only when enabled is true.
   mode: servo
   tip_channels: "left:0"
   tip_tau: "0.1466272473335266,0.44905799627304077,0.3330334722995758"
   tip_head_sha256: 333bbe6d8e8202b0
-  tip_head_hf: {hf_repo: liyifreddy/RSC-finals-checkpoints, revision: 63c52ab2064d60584c679933460448f1a493da3b, file: click_bell/helper/tip_head.pt}
+  tip_head_hf: {hf_repo: liyifreddy/RSC-finals-checkpoints, revision: 2a395d9680be8466a0a554a8fb888b2a82aada1b, file: click_bell/helper/tip_head.pt}

@@ -26,21 +26,22 @@ real-robot datasets. No other real-robot data.
 
 ## Checkpoints per task
 
-All weights are in one Hugging Face repository. Each task pins a 40-character revision and a
-subfolder in `policy/MyPolicy/configs/<task>.yml`. The evaluation reads exactly these files.
+All weights are in one Hugging Face repository, [`liyifreddy/RSC-finals-checkpoints`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints), at revision
+`2a395d9680be8466a0a554a8fb888b2a82aada1b`. Each task pins this revision and its subfolder in
+`policy/MyPolicy/configs/<task>.yml`. The evaluation reads exactly these files.
 
-| Task | Hugging Face checkpoint | Subfolder | Training step | Revision | Notes |
-|---|---|---|---|---|---|
-| `click_bell` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/click_bell/student) | `click_bell/student` | 160000 (finals_1115) | `63c52ab2064d60584c679933460448f1a493da3b` | none |
-| `drawer_open_place` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/drawer_open_place/student) | `drawer_open_place/student` | 160000 | `63c52ab2064d60584c679933460448f1a493da3b` | none |
-| `handle_basket` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/handle_basket/student) | `handle_basket/student` | 160000 | `63c52ab2064d60584c679933460448f1a493da3b` | none |
-| `item_assembly` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/item_assembly/student) | `item_assembly/student` | 160000 (finals_1115) | `63c52ab2064d60584c679933460448f1a493da3b` | none |
-| `items_handover` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/items_handover/student) | `items_handover/student` | 160000 | `63c52ab2064d60584c679933460448f1a493da3b` | none |
-| `manipulate_pipette` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/manipulate_pipette/student) | `manipulate_pipette/student` | 120000 | `63c52ab2064d60584c679933460448f1a493da3b` | none |
-| `mixer_operating` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/mixer_operating/student) | `mixer_operating/student` | 180000 | `63c52ab2064d60584c679933460448f1a493da3b` | none |
-| `sample_loading` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/sample_loading/student) | `sample_loading/student` | 160000 | `63c52ab2064d60584c679933460448f1a493da3b` | helper on (helpers/sample_loading/) |
-| `table_rearrangement` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/table_rearrangement/student) | `table_rearrangement/student` | 160000 (finals_1115) | `63c52ab2064d60584c679933460448f1a493da3b` | none |
-| `water_pouring` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/water_pouring/student) | `water_pouring/student` | 160000 | `63c52ab2064d60584c679933460448f1a493da3b` | none |
+| Task | Weights (subfolder) | Training step | Weights sha256 (first 8) | Helper |
+|---|---|---|---|---|
+| `click_bell` | [`click_bell/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/click_bell/student) | 160000 | `02a2ed93` | off |
+| `drawer_open_place` | [`drawer_open_place/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/drawer_open_place/student) | 160000 | `91619ff7` | off |
+| `handle_basket` | [`handle_basket/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/handle_basket/student) | 160000 | `6c6f1e52` | off |
+| `item_assembly` | [`item_assembly/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/item_assembly/student) | 160000 | `1db9a74c` | off |
+| `items_handover` | [`items_handover/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/items_handover/student) | 160000 | `ca4b805f` | off |
+| `manipulate_pipette` | [`manipulate_pipette/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/manipulate_pipette/student) | 120000 | `0222dd54` | off |
+| `mixer_operating` | [`mixer_operating/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/mixer_operating/student) | 180000 | `733f5d97` | off |
+| `sample_loading` | [`sample_loading/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/sample_loading/student) | 160000 | `917d9285` | on |
+| `table_rearrangement` | [`table_rearrangement/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/table_rearrangement/student) | 160000 | `ae7a3079` | off |
+| `water_pouring` | [`water_pouring/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/water_pouring/student) | 160000 | `c7b98d4a` | off |
 
 All tasks also use the shared V-JEPA 2.1 encoder (`shared/`, `ofi_backbone` in
 [`policy/MyPolicy/deploy_policy.yml`](policy/MyPolicy/deploy_policy.yml)).
@@ -56,6 +57,25 @@ Helpers read only the observation the evaluation provides: the joint readings (`
 camera images. The `sample_loading` helper uses the top camera (`cam_high`) once at the start to
 locate the rack, with a fixed camera calibration, and the joint readings afterwards. Helpers do not
 read simulator state. Their actions go through the same joint-limit clipping as the policy's.
+
+## Directory layout
+
+```
+policy/
+├── act/                     official ACT adapter (unchanged)
+└── MyPolicy/
+    ├── eval.sh              entry point (official argument order)
+    ├── deploy_policy.yml    official keys, action post-processing, task table, encoder pin
+    ├── deploy_policy.py     get_model / eval / reset_model
+    ├── configs/<task>.yml   per task: Hugging Face repository + revision + subfolder, helper switch
+    ├── helpers/<task>/      per-task helper code (click_bell, sample_loading)
+    ├── ofi/                 model client and worker
+    ├── prefetch.py          downloads and checks all pinned weights
+    └── tests/, tools/, locks/
+```
+
+The code reads weights only from the local Hugging Face cache (`$HF_HOME/hub`, default
+`~/.cache/huggingface/hub`), at the pinned revisions. Nothing is downloaded during evaluation.
 
 ## Setup
 
@@ -74,9 +94,20 @@ Full commands: [`policy/MyPolicy/README.md`](policy/MyPolicy/README.md), Setup 1
 4. Model worker: a Python 3.10 environment from `policy/MyPolicy/ofi/locks/ofi_worker.txt`
    (PyTorch 2.7.1+cu128, `--no-deps`), plus RoboActualizer `85b9dc6` and vjepa2 `204698b`.
    Set `OFI_PYTHON` and `OFI_SRC_ROOT`.
-5. Weights: run `policy/MyPolicy/prefetch.py` once. It downloads every pinned file into the local
-   Hugging Face cache and checks its sha256. `--check` verifies offline. The evaluation downloads
-   nothing.
+5. Weights, one command (with a Hugging Face account that can read the repository):
+   ```bash
+   cd RoboSynChallenge
+   policy/act/.venv/bin/python policy/MyPolicy/prefetch.py
+   ```
+   It downloads every file pinned in `deploy_policy.yml` and `configs/<task>.yml` (ten students, the
+   shared encoder, and the files of every enabled helper) into the Hugging Face cache, checks each
+   file's sha256, prints one line per item, and ends with `[prefetch] done: N of N`. It exits with an
+   error if anything is missing. To check again without downloading:
+   ```bash
+   HF_HUB_OFFLINE=1 policy/act/.venv/bin/python policy/MyPolicy/prefetch.py --check
+   # [prefetch] check: 13 of 13 in the local caches
+   ```
+   Set `HF_HOME` to download to another directory; use the same `HF_HOME` when evaluating.
 6. Self-check: `policy/MyPolicy/tests/*.py` (CPU, a few seconds).
 
 ## Running

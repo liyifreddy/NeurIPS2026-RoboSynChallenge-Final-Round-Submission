@@ -2,5 +2,5 @@
 # Listed in deploy_policy.yml task_policies as {config: configs/manipulate_pipette.yml}.
 backend: ofi
 hf_repo: liyifreddy/RSC-finals-checkpoints
-revision: 63c52ab2064d60584c679933460448f1a493da3b
+revision: 2a395d9680be8466a0a554a8fb888b2a82aada1b
 subfolder: manipulate_pipette/student
