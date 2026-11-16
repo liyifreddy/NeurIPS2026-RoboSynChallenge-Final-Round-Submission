@@ -103,9 +103,20 @@ We evaluated with `eval_reset_sync_steps = 0`, the default of `scripts/eval_poli
 ## Requirements
 
 Linux x86-64 and one NVIDIA GPU with a driver for CUDA 12.8 (≥ 570). Python 3.11 (simulator and
-adapter) and Python 3.10 (model worker), PyTorch 2.7.1+cu128, `uv`, `git`. Tested on a single RTX 5090
-(32 GB) through the official entry for all ten tasks. Peak GPU memory is about 6.4 GB per task with the
-simulator, and about 7.4 GB with a helper on.
+adapter) and Python 3.10 (model worker), PyTorch 2.7.1+cu128, `uv`, `git`. Peak GPU memory is about
+6.4 GB per task with the simulator, and about 7.4 GB with a helper on.
+
+We tested a clean install and all ten tasks through the official entry on:
+
+| Item | Version |
+|---|---|
+| RoboSynChallenge | `45d9b9c` |
+| EmbodiChain | `v0.2.4.post1` |
+| GPU / driver | RTX 5090 (32 GB) / 610.57.04 |
+| OS | Ubuntu 22.04.5 |
+| Vulkan | 1.4.341 (NVIDIA ICD) |
+| PyTorch / CUDA | 2.7.1+cu128 / 12.8 |
+| Python | 3.11 (simulator, adapter), 3.10 (model worker) |
 
 ## Licenses
 
