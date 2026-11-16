@@ -32,7 +32,7 @@ All weights are in one Hugging Face repository, [`liyifreddy/RSC-finals-checkpoi
 
 | Task | Weights (subfolder) | Training step | Weights sha256 (first 8) | Helper |
 |---|---|---|---|---|
-| `click_bell` | [`click_bell/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/click_bell/student) | 160000 | `02a2ed93` | off |
+| `click_bell` | [`click_bell/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/click_bell/student) | 160000 | `02a2ed93` | on |
 | `drawer_open_place` | [`drawer_open_place/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/drawer_open_place/student) | 160000 | `91619ff7` | off |
 | `handle_basket` | [`handle_basket/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/handle_basket/student) | 160000 | `6c6f1e52` | off |
 | `item_assembly` | [`item_assembly/student`](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/2a395d9680be8466a0a554a8fb888b2a82aada1b/item_assembly/student) | 160000 | `1db9a74c` | off |
@@ -51,6 +51,7 @@ All tasks also use the shared V-JEPA 2.1 encoder (`shared/`, `ofi_backbone` in
 A helper is a small rule-based controller for one task. It is switched on or off in that task's
 configuration file (`helper.enabled`). Enabled in this submission:
 
+- `click_bell` (`helpers/click_bell/bell_press.py`): top-camera servo on the right hand. When the right fingertip has stopped near the bell cap in the top image, the helper aligns the fingertip with the cap in that same image (at most 2 mm sideways per step), presses down until it meets resistance, then lifts and hands back. It hands back early after 150 steps, after 5 missed fingertip detections, or after drifting 40 mm sideways, and it does nothing if the fingertip is not detected.
 - `sample_loading` (`helpers/sample_loading/sample_search.py`): when the left gripper holds the tube above the rack and the policy starts to open it, the helper takes the left arm and lowers the tube until it meets resistance. If the hand has descended at least 20 mm by then, it treats the tube as inserted, opens the gripper slowly and lifts the hand; otherwise it first runs a small spiral search around the contact point. It acts at most once per episode and always hands back before the episode ends (it releases by step 440 of the 500-step episode and does not take over after step 400).
 
 Helpers read only the observation the evaluation provides: the joint readings (`robot/qpos`) and

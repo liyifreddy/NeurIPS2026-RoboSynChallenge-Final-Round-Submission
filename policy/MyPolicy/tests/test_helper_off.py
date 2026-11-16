@@ -47,9 +47,9 @@ class TestHelperOff(unittest.TestCase):
         cfg["task_policies"]["click_bell"] = entry
         return cfg
 
-    def test_shipped_yml_helper_is_off_and_file_camera(self):
+    def test_shipped_yml_helper_is_on_and_file_camera(self):
         h = TC.task_entry(SK._yml()["task_policies"], "click_bell")["helper"]
-        self.assertIs(h["enabled"], False)            # delivered off (总-580); one switch to turn it on
+        self.assertIs(h["enabled"], True)             # delivered on (servo, right hand); one switch to turn it off
         self.assertEqual(h["camera"], "file")
         calib = POLICY_DIR / "helpers" / "click_bell" / "calib" / f"platform_{h['platform']}.json"
         self.assertTrue(hashlib.sha256(calib.read_bytes()).hexdigest().startswith(str(h["calib_sha256"])))
@@ -61,7 +61,7 @@ class TestHelperOff(unittest.TestCase):
             h = TC.task_entry(cfg["task_policies"], t).get("helper")
             if h is None:
                 continue
-            self.assertIs(h["enabled"], t == "sample_loading", t)   # 总-604 ①: sample_loading helper delivered on
+            self.assertIs(h["enabled"], t in ("sample_loading", "click_bell"), t)   # helpers delivered on
             if t == "sample_loading":
                 self.assertIn("head_hf", h)
             if "module" not in h:
