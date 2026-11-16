@@ -1,4 +1,4 @@
-# RoboSynChallenge 2026 — real-robot finals submission (team OC-Manip)
+# RoboSynChallenge 2026: real-robot finals submission (team OC-Manip)
 
 Thank you to the RoboSynChallenge organizers for the benchmark, the simulator, the released data and
 the real-robot evaluation.
@@ -29,18 +29,18 @@ real-robot datasets. No other real-robot data.
 All weights are in one Hugging Face repository. Each task pins a 40-character revision and a
 subfolder in `policy/MyPolicy/configs/<task>.yml`. The evaluation reads exactly these files.
 
-| Task | Hugging Face checkpoint | Subfolder | Revision | Notes |
-|---|---|---|---|---|
-| `click_bell` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/click_bell/student) | `click_bell/student` | `63c52ab2064d60584c679933460448f1a493da3b` | — |
-| `drawer_open_place` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/drawer_open_place/student) | `drawer_open_place/student` | `63c52ab2064d60584c679933460448f1a493da3b` | — |
-| `handle_basket` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/handle_basket/student) | `handle_basket/student` | `63c52ab2064d60584c679933460448f1a493da3b` | — |
-| `item_assembly` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/item_assembly/student) | `item_assembly/student` | `63c52ab2064d60584c679933460448f1a493da3b` | — |
-| `items_handover` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/items_handover/student) | `items_handover/student` | `63c52ab2064d60584c679933460448f1a493da3b` | — |
-| `manipulate_pipette` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/manipulate_pipette/student) | `manipulate_pipette/student` | `63c52ab2064d60584c679933460448f1a493da3b` | — |
-| `mixer_operating` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/mixer_operating/student) | `mixer_operating/student` | `63c52ab2064d60584c679933460448f1a493da3b` | — |
-| `sample_loading` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/sample_loading/student) | `sample_loading/student` | `63c52ab2064d60584c679933460448f1a493da3b` | helper on (helpers/sample_loading/) |
-| `table_rearrangement` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/table_rearrangement/student) | `table_rearrangement/student` | `63c52ab2064d60584c679933460448f1a493da3b` | — |
-| `water_pouring` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/water_pouring/student) | `water_pouring/student` | `63c52ab2064d60584c679933460448f1a493da3b` | — |
+| Task | Hugging Face checkpoint | Subfolder | Training step | Revision | Notes |
+|---|---|---|---|---|---|
+| `click_bell` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/click_bell/student) | `click_bell/student` | 160000 (finals_1115) | `63c52ab2064d60584c679933460448f1a493da3b` | none |
+| `drawer_open_place` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/drawer_open_place/student) | `drawer_open_place/student` | 160000 | `63c52ab2064d60584c679933460448f1a493da3b` | none |
+| `handle_basket` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/handle_basket/student) | `handle_basket/student` | 160000 | `63c52ab2064d60584c679933460448f1a493da3b` | none |
+| `item_assembly` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/item_assembly/student) | `item_assembly/student` | 160000 (finals_1115) | `63c52ab2064d60584c679933460448f1a493da3b` | none |
+| `items_handover` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/items_handover/student) | `items_handover/student` | 160000 | `63c52ab2064d60584c679933460448f1a493da3b` | none |
+| `manipulate_pipette` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/manipulate_pipette/student) | `manipulate_pipette/student` | 120000 | `63c52ab2064d60584c679933460448f1a493da3b` | none |
+| `mixer_operating` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/mixer_operating/student) | `mixer_operating/student` | 180000 | `63c52ab2064d60584c679933460448f1a493da3b` | none |
+| `sample_loading` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/sample_loading/student) | `sample_loading/student` | 160000 | `63c52ab2064d60584c679933460448f1a493da3b` | helper on (helpers/sample_loading/) |
+| `table_rearrangement` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/table_rearrangement/student) | `table_rearrangement/student` | 160000 (finals_1115) | `63c52ab2064d60584c679933460448f1a493da3b` | none |
+| `water_pouring` | [liyifreddy/RSC-finals-checkpoints](https://huggingface.co/liyifreddy/RSC-finals-checkpoints/tree/63c52ab2064d60584c679933460448f1a493da3b/water_pouring/student) | `water_pouring/student` | 160000 | `63c52ab2064d60584c679933460448f1a493da3b` | none |
 
 All tasks also use the shared V-JEPA 2.1 encoder (`shared/`, `ofi_backbone` in
 [`policy/MyPolicy/deploy_policy.yml`](policy/MyPolicy/deploy_policy.yml)).
