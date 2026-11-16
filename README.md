@@ -151,6 +151,8 @@ We tested a clean install and all ten tasks through the official entry on:
 
 ## Licenses
 
+Third-party code carried by the helpers and its licenses: [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
+
 Our code: see the file headers. RoboActualizer (OfI model code) and V-JEPA 2 / 2.1 (encoder code): MIT,
 fetched from their upstream repositories at the pinned commits.
 
