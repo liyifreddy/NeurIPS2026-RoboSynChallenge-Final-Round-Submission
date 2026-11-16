@@ -68,7 +68,8 @@ class SampleSearch:
                       direct=f("direct_mm", 20) / 1000, open_n=int(g("open_steps", 12)), lift=f("lift_mm", 60) / 1000,
                       search_max=int(g("search_max", 200)), total_max=int(g("total_max", 360)),
                       t_min=int(g("t_min", 150)), grip_open_seen=f("grip_open_seen", 0.8), debug_trace=bool(g("debug_trace", False)), require_grasp=bool(g("require_grasp", True)),
-                      ep_max=int(g("ep_max", 500)), reserve=int(g("reserve_steps", 60)), min_left=int(g("min_left_steps", 100)))
+                      ep_max=int(g("ep_max", 500)), reserve=int(g("reserve_steps", 60)), min_left=int(g("min_left_steps", 100)),
+                      hold_cmd=(None if g("hold_cmd", None) is None else float(g("hold_cmd", None))))   # C: after take-over pin the left gripper command to this (0-1; 0 = fully closed); None = the student's holding command
         import hashlib
         cp = os.path.join(HERE, "calib", f"platform_{self.c['platform']}.json")
         want_c = str(g("calib_sha256", ""))
@@ -207,6 +208,8 @@ class SampleSearch:
                 S["hmin"] = req if S["hmin"] is None else min(S["hmin"], req)
                 if req <= S["hmin"] + self.c["open_tol"]:
                     return action
+                if self.c["hold_cmd"] is not None:
+                    S["hmin"] = self.c["hold_cmd"]      # C 版（总-615①）：接手后夹紧，管不在爪里往上滑；慢松也从这个值张开
                 S.update(ph="down", n=0, k=0, grip=S["hmin"], R=Ta[:3, :3].copy(), qc=q[ARMS["left"]].copy(), cz=float(pl[2]), z_take=float(pl[2]), xy=pl[:2].copy(), zh=[], rn=0, ln=0, th=0.0)
                 S["rec"].update(t_take=t, dz_mm=round(dz * 1000, 1)); self._ev(kind="take")
             S["n"] += 1; S["k"] += 1; za = float(pl[2]); c = self.c
