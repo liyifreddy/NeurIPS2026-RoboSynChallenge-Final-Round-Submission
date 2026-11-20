@@ -1,0 +1,13 @@
+# ALTERNATIVE, NOT THE SUBMITTED SETTING. click_bell without its helper, so that the task can run on the
+# organizers' chunk adapter (rsc_real/chunks.py, ChunkBridge). Use it only if the per-step adapter is not
+# accepted for click_bell: in deploy_policy.yml, task_policies, set
+#   click_bell: {config: configs/alternatives/click_bell_chunk.yml}
+# Same checkpoint pin and overrides as configs/click_bell.yml; the helper (a closed loop on each step's
+# top-camera image and joint readings) is off, i.e. the student alone, 32 actions per chunk.
+backend: ofi
+hf_repo: liyifreddy/RSC-finals-checkpoints
+revision: 2a395d9680be8466a0a554a8fb888b2a82aada1b
+subfolder: click_bell/student
+overrides: {ofi_replan_steps: 32, ofi_act_step: 32}
+helper:
+  enabled: false

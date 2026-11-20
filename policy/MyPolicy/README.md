@@ -150,14 +150,22 @@ Both need a GPU for a meaningful number; CPU numbers only prove the path runs.
 The real station runs a serial model: one observation in, one chunk of actions out, the whole chunk
 executed, the real observation after each action fed back to the policy while the robot moves
 (organizers' `rsc_real/chunks.py`, `ChunkBridge`). `deploy_policy.eval` has the reviewed loop
-shape for this: for a task whose actions are all fixed when the chunk is inferred (every task
-without a helper and without gripper hysteresis), it infers once, post-processes the whole chunk
-with `action_post` in order, then `for action in actions: ... = env.step(action)` and feeds each
-returned observation into the model's frame history (the model reads frames t, t-4, t-8, t-12).
-Worker requests, frames in the history and actions are the same as on the per-step path. Tasks
-whose actions read each step's observation (`click_bell` and `sample_loading` helpers,
-`items_handover` gripper hysteresis) keep the per-step path (`rsc_real/bridge.py`,
-`FeedbackBridge`).
+shape for this: for a task whose chunk can be fixed when it is inferred (every task without a
+helper), it infers once, post-processes the whole chunk with `action_post` in order, then
+`for action in actions: ... = env.step(action)` and feeds each returned observation into the
+model's frame history (the model reads frames t, t-4, t-8, t-12). Worker requests, frames in the
+history and actions are the same as on the per-step path. For `items_handover` the left-gripper
+hysteresis is computed for the whole chunk when it is inferred: whether it is active is read from
+that observation, and within the chunk it follows the model's own commands; this differs from the
+per-step path only if it becomes active in the middle of a chunk (left gripper reading above 0.84;
+the official real-robot recordings never exceed 0.64).
+
+The `click_bell` and `sample_loading` helpers are closed loops on each step's observation (camera
+servoing, contact detection), so these two tasks keep the per-step path (`rsc_real/bridge.py`,
+`FeedbackBridge`); this is the submitted behaviour. Only if the per-step adapter is not accepted for
+them, `configs/alternatives/click_bell_chunk.yml` and `configs/alternatives/sample_loading_chunk.yml`
+run the same checkpoints without the helper on the chunk adapter (set the task's entry in
+`deploy_policy.yml` `task_policies` to that file). They are not used by default.
 
 Serving details in `ofi/ofi_backend.py` (no action or model input changes):
 
@@ -205,6 +213,7 @@ any version, so the bitwise comparison uses a seed (default 0).
 | `eval.sh` | entry point (official argument order) |
 | `deploy_policy.yml` | official keys + `action_post`, `backends`, `task_policies`, backend parameters |
 | `deploy_policy.py` | `get_model` / `eval` / `reset_model` / `close_model`: routing + post-processing |
+| `configs/alternatives/` | chunk configurations of `click_bell` / `sample_loading` without helpers; not used by default |
 | `action_post.py` | joint-limit clip, gripper 0–1 + optional switch, optional step limit, counters and log (numpy only) |
 | `backends/ofi.py` | One-from-Infinity model backend (finds the task checkpoint) |
 | `backends/hold.py` | holds the current pose; tests only, not routed to any task |

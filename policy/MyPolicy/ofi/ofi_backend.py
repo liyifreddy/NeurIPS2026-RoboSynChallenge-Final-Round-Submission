@@ -578,9 +578,11 @@ def eval(env, model, obs):
 
 
 def chunkable(model):
-    """True when every action of a chunk is fixed at inference time: no left-gripper hysteresis and
-    no pre-place correction (both read each step's observation), one inference per eval call."""
-    return model.hyst is None and model.ppc is None and model.act_step == model.replan_steps
+    """True when the whole chunk can be fixed at inference time: no pre-place correction (it reads
+    each step's observation) and one inference per eval call. With ofi_left_grip_hyst the chunk is
+    fixed too: whether the hysteresis is active is read from the observation the chunk is inferred
+    on, and within the chunk it follows the model's own commands (plan())."""
+    return model.ppc is None and model.act_step == model.replan_steps
 
 
 def plan(env, model, obs, post):
@@ -589,7 +591,7 @@ def plan(env, model, obs, post):
     frame with the inference, chunk checks); action_post runs here, action by action, in order.
     Returns (actions: list of [1, 14] tensors, inference times)."""
     if not chunkable(model):
-        raise ValueError("plan() needs a task whose actions do not read each step's observation")
+        raise ValueError("plan() needs a task whose chunk can be fixed at inference time")
     model.queue.clear()   # the per-step queue is not used on this path
     if model.need_seed:
         s = _episode_seed(env)
@@ -616,6 +618,12 @@ def plan(env, model, obs, post):
     actions = []
     for i in range(model.replan_steps):
         exe = chunk[i]
+        if model.hyst is not None:
+            # As eval(), except that every step of the chunk reads the gripper of the observation the
+            # chunk was inferred on (the later ones are not known yet). The result differs from eval()
+            # only if the hysteresis would become active (left gripper reading > arm_open) in the
+            # middle of a chunk; once active it depends only on the model's commands.
+            exe = model.hyst_step(obs, exe, exe)
         model.last_left = float(exe[GRIP_IDX[0]])
         model.t += 1
         a = torch.as_tensor(exe, dtype=torch.float32, device=env.unwrapped.device).unsqueeze(0)

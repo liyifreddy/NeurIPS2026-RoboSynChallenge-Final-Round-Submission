@@ -152,7 +152,7 @@ def _episode_seed(env):
 
 def _chunked(model):
     """Tasks whose actions are all fixed when the chunk is inferred: no helper, no wrist blanking,
-    and a backend that can hand over a whole planned chunk (OfI without hysteresis / correction)."""
+    and a backend that can hand over a whole planned chunk (ofi_backend.chunkable)."""
     chunkable = getattr(model.backend, "chunkable", None)
     return (model.helper is None and not model.wrist_blank and chunkable is not None
             and chunkable(model.inner))
@@ -163,8 +163,8 @@ def eval(env, model, obs):
     # each action's real observation fed back (chunks.ChunkBridge rewrites the loop below to declare
     # `actions` first). The actions are post-processed (action_post) before the loop, so the values
     # sent are exactly the declared ones; the step order, the frames the model sees and the actions
-    # are those of the per-step path. Tasks whose actions read each step's observation (helpers,
-    # gripper hysteresis) keep the per-step path.
+    # are those of the per-step path. Tasks with a helper (closed loops on each step's observation)
+    # keep the per-step path; configs/alternatives/ has chunk configurations without the helpers.
     if model.seed_pending:
         model.post.seed = _episode_seed(env)
         model.seed_pending = False

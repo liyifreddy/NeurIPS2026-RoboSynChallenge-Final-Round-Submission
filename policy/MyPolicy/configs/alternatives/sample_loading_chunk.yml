@@ -1,0 +1,12 @@
+# ALTERNATIVE, NOT THE SUBMITTED SETTING. sample_loading without its helper, so that the task can run on the
+# organizers' chunk adapter (rsc_real/chunks.py, ChunkBridge). Use it only if the per-step adapter is not
+# accepted for sample_loading: in deploy_policy.yml, task_policies, set
+#   sample_loading: {config: configs/alternatives/sample_loading_chunk.yml}
+# Same checkpoint pin as configs/sample_loading.yml; the helper (a closed loop on each step's joint
+# readings: contact detection and hole search) is off, i.e. the student alone, 24 actions per chunk.
+backend: ofi
+hf_repo: liyifreddy/RSC-finals-checkpoints
+revision: 2a395d9680be8466a0a554a8fb888b2a82aada1b
+subfolder: sample_loading/student
+helper:
+  enabled: false
