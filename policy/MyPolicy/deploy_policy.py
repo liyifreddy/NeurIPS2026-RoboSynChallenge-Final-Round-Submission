@@ -27,6 +27,8 @@ os.environ.setdefault("EMBODICHAIN_SIM_EXIT_PROCESS", "0")
 import importlib
 import sys
 
+import torch
+
 from .action_post import ActionPost, GuardedEnv, default_log_path, parse_cfg
 from .task_config import task_entry
 from . import wrist_blank as _wb
@@ -148,10 +150,41 @@ def _episode_seed(env):
     return None
 
 
+def _chunked(model):
+    """Tasks whose actions are all fixed when the chunk is inferred: no helper, no wrist blanking,
+    and a backend that can hand over a whole planned chunk (OfI without hysteresis / correction)."""
+    chunkable = getattr(model.backend, "chunkable", None)
+    return (model.helper is None and not model.wrist_blank and chunkable is not None
+            and chunkable(model.inner))
+
+
 def eval(env, model, obs):
+    # Real station (organizers' rsc_real): one observation in, one chunk of actions out, all executed,
+    # each action's real observation fed back (chunks.ChunkBridge rewrites the loop below to declare
+    # `actions` first). The actions are post-processed (action_post) before the loop, so the values
+    # sent are exactly the declared ones; the step order, the frames the model sees and the actions
+    # are those of the per-step path. Tasks whose actions read each step's observation (helpers,
+    # gripper hysteresis) keep the per-step path.
     if model.seed_pending:
         model.post.seed = _episode_seed(env)
         model.seed_pending = False
+    if not _chunked(model):
+        return _eval_per_step(env, model, obs)
+    actions, times = model.backend.plan(env, model.inner, obs, model.post)
+    info, truncated, n = None, False, 0
+    for action in actions:
+        obs, reward, terminated, truncated, info = env.step(action)
+        n += 1
+        model.backend.feedback(model.inner, obs, n < len(actions))
+        if env.get_wrapper_attr('is_task_success')():
+            break
+        if torch.as_tensor(truncated).any():
+            break
+    return obs, info, truncated, times
+
+
+def _eval_per_step(env, model, obs):
+    """Every action goes through GuardedEnv (action_post) as it is sent."""
     genv = GuardedEnv(env, model.post, obs)
     if model.helper is not None:
         # outside GuardedEnv: the helper's action still goes through action_post

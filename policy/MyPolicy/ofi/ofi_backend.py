@@ -40,10 +40,27 @@
 # Interface: get_model / eval / reset_model / close_model.
 # ----------------------------------------------------------------------------
 
+#
+# Real-robot serving (finals correction, request real_88e951d11a824c). The station
+# delivers one observation per action through a feedback bridge, so the time from an
+# observation to the next action is the per-step reply time. Three changes, none of
+# which changes an action or the frames the model sees:
+#   1. CPU threads of this process and of the worker follow the container CPU quota
+#      (cgroup cpu.max / cfs quota and the CPU affinity), instead of the host core count.
+#   2. Worker requests run in order on one background thread. A step that does not run
+#      an inference returns its already planned action without waiting for the worker to
+#      add the frame to its history; a step that infers first waits until every earlier
+#      frame is in the history (one pipe, strict request order), so the model input is
+#      the same as when every push waited.
+#   3. A worker that exits or stops answering raises from eval() within seconds
+#      (OFI_STEP_TIMEOUT, OFI_FIRST_INFER_TIMEOUT) instead of blocking.
+
 from __future__ import annotations
 
 import atexit
+import concurrent.futures
 import json
+import math
 import os
 import subprocess
 import time
@@ -58,6 +75,9 @@ from .checkpoints import ofi_manifest, ofi_runtime, require_hub_file, switch_val
 CAM_ORDER = ("cam_high", "cam_left_wrist", "cam_right_wrist")
 WORKER = Path(__file__).resolve().parent / "ofi_worker.py"
 GRIP_IDX = (6, 13)  # [left_arm 6, left_gripper, right_arm 6, right_gripper]; gripper in [0, 1], 0 = closed
+MAX_CPU_THREADS = 8        # per process, also capped by the container quota (cpu_quota)
+STEP_TIMEOUT = 30.0        # s without a worker reply to a push / inference -> eval raises (normal: < 0.1 s)
+FIRST_INFER_TIMEOUT = 60.0  # s, the first inference of the worker includes its CUDA warm-up
 
 
 def _to_numpy(x):
@@ -160,6 +180,44 @@ def _left_grip_hyst(v):
     return h
 
 
+def cpu_quota():
+    """CPUs this process may use: the CPU affinity, capped by the container CFS quota
+    (cgroup v2 cpu.max, else cgroup v1 cpu.cfs_quota_us / cpu.cfs_period_us)."""
+    try:
+        n = len(os.sched_getaffinity(0))
+    except AttributeError:
+        n = os.cpu_count() or 1
+    quota = None
+    try:
+        q, period = Path("/sys/fs/cgroup/cpu.max").read_text().split()[:2]
+        if q != "max":
+            quota = int(q) / int(period)
+    except (OSError, ValueError):
+        try:
+            q = int(Path("/sys/fs/cgroup/cpu/cpu.cfs_quota_us").read_text())
+            period = int(Path("/sys/fs/cgroup/cpu/cpu.cfs_period_us").read_text())
+            if q > 0 and period > 0:
+                quota = q / period
+        except (OSError, ValueError):
+            pass
+    if quota is not None:
+        n = min(n, math.ceil(quota))
+    return max(1, n)
+
+
+def _warn_nonfinite(chunk):
+    """A non-finite model output does not stop the episode: action_post holds the last command (before
+    the first one, the current qpos) for those values, as it does for any non-finite action."""
+    if not np.isfinite(chunk).all():
+        print(f"[OfI] WARNING: {int((~np.isfinite(chunk)).sum())} non-finite values in the chunk; "
+              "action_post holds the previous command for them", flush=True)
+
+
+def _env_float(name, default):
+    v = os.environ.get(name, "")
+    return float(v) if v.strip() else default
+
+
 def _as_bool(v):
     if isinstance(v, torch.Tensor):
         return bool(v.any().item())
@@ -215,6 +273,18 @@ class OfIClient:
         env["HF_HUB_OFFLINE"] = "1"
         env["TRANSFORMERS_OFFLINE"] = "1"
         env["PYTHONUNBUFFERED"] = "1"
+        # CPU threads follow the container quota, not the host core count (both processes)
+        self.cpu_threads = min(cpu_quota(), MAX_CPU_THREADS)
+        for k in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+            env[k] = str(self.cpu_threads)
+        if torch.get_num_threads() > self.cpu_threads:
+            torch.set_num_threads(self.cpu_threads)
+        self.step_timeout = _env_float("OFI_STEP_TIMEOUT", STEP_TIMEOUT)
+        self.first_infer_timeout = _env_float("OFI_FIRST_INFER_TIMEOUT", FIRST_INFER_TIMEOUT)
+        self.async_push = str(usr_args.get("ofi_async_push", True)).strip().lower() not in ("0", "false", "off", "no")
+        self.inferred = False      # the worker has answered one inference (first one includes warm-up)
+        self.pending = deque()     # pushes sent without waiting, oldest first
+        self._io = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="ofi-rpc")
         # The simulator keeps all GPUs visible and picks its card by gpu_id (DexSim's Vulkan device
         # ignores CUDA_VISIBLE_DEVICES); the worker only uses CUDA, so it is pinned to that card.
         env["CUDA_VISIBLE_DEVICES"] = str(usr_args.get("ofi_cuda_visible_devices", usr_args.get("gpu_id", 0)))
@@ -228,7 +298,7 @@ class OfIClient:
         self._err = open(self.stderr_path, "a") if self.stderr_path else None
         self.proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self._err, env=env)
         atexit.register(self.close)
-        self.info = self._rpc({"cmd": "hello"})
+        self.info = self._rpc({"cmd": "hello"}, timeout=None)   # model loading: no time limit
         if int(self.info.get("chunk_size", 0)) < self.replan_steps:
             raise ValueError(f"replan_steps {self.replan_steps} > chunk {self.info.get('chunk_size')}")
         for key, role in (("ckpt_sha256", "weights"), ("stats_sha256", "stats")):   # the files the worker read
@@ -244,6 +314,9 @@ class OfIClient:
         print(f"[OfI] backbone: {bb['hf_repo']}@{bb['revision']} {vjepa}", flush=True)
         print("[OfI] inference variant: " + json.dumps({
             "replan_steps": self.replan_steps, "act_step": self.act_step, "left_grip_hyst": self.hyst}), flush=True)
+        print("[OfI] serving: " + json.dumps({
+            "cpu_threads": self.cpu_threads, "async_push": self.async_push, "step_timeout_s": self.step_timeout,
+            "first_infer_timeout_s": self.first_infer_timeout}), flush=True)
         if self.hyst is not None:
             print("[MyPolicy] ofi_left_grip_hyst ON", flush=True)
         if self.ppc is not None:
@@ -277,7 +350,14 @@ class OfIClient:
     def hyst_step(self, obs, raw, exe):
         """ofi_left_grip_hyst: once the raw left command < lo, command closed until it is >= hi for k_open steps."""
         hy, li = self.hyst, GRIP_IDX[0]
-        if _grips(obs)[0] > hy["arm_open"]:
+        try:
+            gl = _grips(obs)[0]
+        except ValueError as e:   # an unexpected reading never stops the episode: no hysteresis this step
+            if not getattr(self, "hy_warned", False):
+                print(f"[OfI] WARNING: left_grip_hyst skipped: {e}", flush=True)
+                self.hy_warned = True
+            return exe
+        if gl > hy["arm_open"]:
             self.hy_armed = True
         if not self.hy_armed:
             return exe
@@ -301,7 +381,8 @@ class OfIClient:
         exe[li] = 0.0
         return exe
 
-    def _rpc(self, req, payload=b""):
+    def _exchange(self, req, payload=b""):
+        """One request -> one reply on the worker pipe. Runs only on the self._io thread."""
         if self.proc.poll() is not None:
             raise RuntimeError(f"OfI worker exited with {self.proc.returncode} (log: {self.stderr_path})")
         self.proc.stdin.write((json.dumps(req) + "\n").encode())
@@ -316,14 +397,75 @@ class OfIClient:
             raise RuntimeError(f"OfI worker error: {rep.get('error')}")
         return rep
 
-    def push(self, obs, infer):
+    def _wait(self, fut, timeout, what, t0=None):
+        """Result of one worker request; raises within about 0.2 s of a worker exit and when
+        there is no reply `timeout` s after t0 (default: now; then the worker is killed: the
+        episode cannot go on)."""
+        t0 = time.monotonic() if t0 is None else t0
+        while True:
+            try:
+                return fut.result(timeout=0.2)
+            except concurrent.futures.TimeoutError:
+                pass
+            if self.proc.poll() is not None and not fut.done():
+                self._abort()
+                raise RuntimeError(f"OfI worker exited with {self.proc.returncode} during {what} "
+                                   f"(log: {self.stderr_path})")
+            if timeout is not None and time.monotonic() - t0 > timeout and not fut.done():
+                self._abort()
+                raise TimeoutError(f"OfI worker gave no reply to {what} in {timeout:.0f} s (log: {self.stderr_path})")
+
+    def _abort(self):
+        try:
+            self.proc.kill()   # unblocks the I/O thread (EOF); the episode fails explicitly
+        except Exception:
+            pass
+
+    def _drain(self):
+        """Wait until every push sent without waiting has been answered, oldest first."""
+        while self.pending:
+            fut, sent = self.pending[0]
+            self._wait(fut, self.step_timeout, "a frame push", t0=sent)
+            self.pending.popleft()
+
+    def _check_pending(self):
+        """Raise now if an earlier push failed, the worker is gone, or the oldest unanswered push
+        was sent more than step_timeout s ago (no waiting)."""
+        while self.pending and self.pending[0][0].done():
+            self.pending.popleft()[0].result()
+        if self.proc.poll() is not None:
+            raise RuntimeError(f"OfI worker exited with {self.proc.returncode} (log: {self.stderr_path})")
+        if self.pending and time.monotonic() - self.pending[0][1] > self.step_timeout:
+            self._abort()
+            raise TimeoutError(f"OfI worker gave no reply to a frame push in {self.step_timeout:.0f} s "
+                               f"(log: {self.stderr_path})")
+
+    def _rpc(self, req, payload=b"", timeout=-1):
+        """Request in strict order after every earlier one; wait for its reply."""
+        if timeout == -1:
+            timeout = self.step_timeout
+        self._drain()
+        return self._wait(self._io.submit(self._exchange, req, payload), timeout, req.get("cmd"))
+
+    def push(self, obs, infer, wait=True):
+        """Send this step's frames and qpos. infer: also return the next chunk (always waits).
+        wait=False (no inference): queue the frame for the history and return None at once."""
         cams = [_frame(obs, c) for c in CAM_ORDER]
         q = _qpos(obs)
         if q.shape[0] != self.state_dim:
             raise ValueError(f"qpos dim {q.shape[0]} != {self.state_dim}")
         req = {"cmd": "push", "infer": bool(infer), "shapes": [list(c.shape) for c in cams],
                "nbytes": int(sum(c.nbytes for c in cams)), "qpos": q.tolist()}
-        return self._rpc(req, b"".join(c.tobytes() for c in cams))
+        payload = b"".join(c.tobytes() for c in cams)   # a copy: later changes to obs do not matter
+        if infer:
+            rep = self._rpc(req, payload, self.step_timeout if self.inferred else self.first_infer_timeout)
+            self.inferred = True
+            return rep
+        if wait:
+            return self._rpc(req, payload)
+        self._check_pending()
+        self.pending.append((self._io.submit(self._exchange, req, payload), time.monotonic()))
+        return None
 
     def reset(self):
         self.queue.clear()
@@ -342,11 +484,15 @@ class OfIClient:
         p = getattr(self, "proc", None)
         if p is not None and p.poll() is None:
             try:
+                self._drain()   # the I/O thread is idle afterwards; nothing else writes to the pipe
                 self.proc.stdin.write(b'{"cmd": "quit"}\n')
                 self.proc.stdin.flush()
                 p.wait(timeout=10)
             except Exception:
                 p.kill()
+        io = getattr(self, "_io", None)
+        if io is not None:
+            io.shutdown(wait=False, cancel_futures=True)
         err = getattr(self, "_err", None)
         if err is not None:
             err.close()
@@ -394,13 +540,14 @@ def eval(env, model, obs):
     for _ in range(model.act_step):
         infer = len(model.queue) == 0
         t0 = time.perf_counter()
-        rep = model.push(final_obs, infer)  # record this frame first, as the RoboTwin policy does
+        # record this frame first, as the RoboTwin policy does; without an inference the frame
+        # joins the history in the background (in order, complete before the next inference)
+        rep = model.push(final_obs, infer, wait=not model.async_push)
         if infer:
             chunk = np.asarray(rep["chunk"], dtype=np.float32)
             if chunk.ndim != 2 or chunk.shape[1] != env_dim:
                 raise ValueError(f"chunk shape {chunk.shape}, env action dim {env_dim}")
-            if not np.isfinite(chunk).all():
-                raise ValueError("non-finite action in chunk")
+            _warn_nonfinite(chunk)
             if model.ppc is not None:   # policy computation: counted in the inference time
                 chunk = chunk.copy()
                 try:   # the whole chunk confirms the release ramp; only the executed rows are changed
@@ -428,6 +575,60 @@ def eval(env, model, obs):
     if pre:   # no inference in this call (cannot happen at t == 0, where the queue is empty): keep the time
         times.append(pre)
     return final_obs, info, truncated, times
+
+
+def chunkable(model):
+    """True when every action of a chunk is fixed at inference time: no left-gripper hysteresis and
+    no pre-place correction (both read each step's observation), one inference per eval call."""
+    return model.hyst is None and model.ppc is None and model.act_step == model.replan_steps
+
+
+def plan(env, model, obs, post):
+    """One inference on `obs` and the post-processed actions of the whole chunk, before any of them
+    is sent: the first part of eval() with `chunkable(model)`, in the same order (seed, push of this
+    frame with the inference, chunk checks); action_post runs here, action by action, in order.
+    Returns (actions: list of [1, 14] tensors, inference times)."""
+    if not chunkable(model):
+        raise ValueError("plan() needs a task whose actions do not read each step's observation")
+    model.queue.clear()   # the per-step queue is not used on this path
+    if model.need_seed:
+        s = _episode_seed(env)
+        if s is None:
+            print("[OfI] WARNING: no _robosyn_episode_seed on env; worker not re-seeded", flush=True)
+        else:
+            model._rpc({"cmd": "seed", "seed": s})
+        model.seed = s
+        model.need_seed = False
+    if not model.printed_space:
+        sp = env.unwrapped.single_action_space
+        print(f"[OfI] action space low={np.asarray(sp.low).reshape(-1).tolist()} "
+              f"high={np.asarray(sp.high).reshape(-1).tolist()}", flush=True)
+        model.printed_space = True
+    env_dim = int(np.prod(env.unwrapped.single_action_space.shape))
+    t0 = time.perf_counter()
+    rep = model.push(obs, True)
+    chunk = np.asarray(rep["chunk"], dtype=np.float32)
+    if chunk.ndim != 2 or chunk.shape[1] != env_dim:
+        raise ValueError(f"chunk shape {chunk.shape}, env action dim {env_dim}")
+    _warn_nonfinite(chunk)
+    times = [time.perf_counter() - t0]
+    qpos = obs["robot"]["qpos"] if isinstance(obs, dict) and "robot" in obs else None
+    actions = []
+    for i in range(model.replan_steps):
+        exe = chunk[i]
+        model.last_left = float(exe[GRIP_IDX[0]])
+        model.t += 1
+        a = torch.as_tensor(exe, dtype=torch.float32, device=env.unwrapped.device).unsqueeze(0)
+        # qpos is read only to fill a non-finite value before the first action; the chunk is finite
+        actions.append(post.process(a, qpos=qpos))
+    return actions, times
+
+
+def feedback(model, obs, more):
+    """The observation after one action of a planned chunk joins the frame history, as eval() pushes
+    it before the next action; the observation after the last action is pushed with the next inference."""
+    if more:
+        model.push(obs, False, wait=not model.async_push)
 
 
 def reset_model(model):

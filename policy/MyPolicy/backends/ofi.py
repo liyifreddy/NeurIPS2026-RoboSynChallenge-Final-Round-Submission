@@ -1,7 +1,8 @@
 # ----------------------------------------------------------------------------
 # OfI backend for the finals: the preliminary One-from-Infinity backend
-# (ofi/ofi_backend.py, byte-identical to b50f70a) behind a small adapter that
-# finds the task's checkpoint directory.
+# (ofi/ofi_backend.py: b50f70a plus real-station serving and the chunk interface
+# plan / feedback, see its header) behind a small adapter that finds the task's
+# checkpoint directory.
 #
 # deploy_policy.yml, per task:
 #   ofi_checkpoint_dir: <local dir holding ofi_checkpoint.json>
@@ -69,3 +70,6 @@ def get_model(usr_args):
 eval = _ofi.eval
 reset_model = _ofi.reset_model
 close_model = _ofi.close_model
+chunkable = _ofi.chunkable
+plan = _ofi.plan
+feedback = _ofi.feedback

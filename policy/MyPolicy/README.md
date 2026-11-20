@@ -145,6 +145,51 @@ policy/act/.venv/bin/python policy/MyPolicy/tools/time_e2e.py --steps 200
 ```
 Both need a GPU for a meaningful number; CPU numbers only prove the path runs.
 
+### Real station
+
+The real station runs a serial model: one observation in, one chunk of actions out, the whole chunk
+executed, the real observation after each action fed back to the policy while the robot moves
+(organizers' `rsc_real/chunks.py`, `ChunkBridge`). `deploy_policy.eval` has the reviewed loop
+shape for this: for a task whose actions are all fixed when the chunk is inferred (every task
+without a helper and without gripper hysteresis), it infers once, post-processes the whole chunk
+with `action_post` in order, then `for action in actions: ... = env.step(action)` and feeds each
+returned observation into the model's frame history (the model reads frames t, t-4, t-8, t-12).
+Worker requests, frames in the history and actions are the same as on the per-step path. Tasks
+whose actions read each step's observation (`click_bell` and `sample_loading` helpers,
+`items_handover` gripper hysteresis) keep the per-step path (`rsc_real/bridge.py`,
+`FeedbackBridge`).
+
+Serving details in `ofi/ofi_backend.py` (no action or model input changes):
+
+- CPU threads of the adapter process and of the OfI worker follow the container CPU quota
+  (cgroup `cpu.max` / `cpu.cfs_quota_us` and the CPU affinity, at most 8), not the host core count.
+- Worker requests run in strict order on one background thread. A step without an inference
+  returns its already planned action at once while its frame joins the model's history in the
+  background; a step with an inference first waits until every earlier frame is in the history.
+  `ofi_async_push: false` switches this off (every push waits, as before).
+- Only a broken model process stops an episode: a worker that exits makes `eval()` raise at once,
+  one that gives no reply raises after `OFI_STEP_TIMEOUT` (default 30 s; normal replies take under
+  0.1 s) or, for the first inference with its CUDA warm-up, `OFI_FIRST_INFER_TIMEOUT` (default 60 s).
+  A non-finite model output does not stop the episode (`action_post` holds the previous command for
+  those values), nor does an unexpected gripper reading in the hysteresis (skipped for that step).
+
+`tools/check_real_feedback.py` reproduces this: it wraps the policy in the organizers'
+`ChunkBridge` with `ChunkGuard` (fps 10) (`--bridge serial`: `FeedbackBridge`), feeds a recorded
+episode of the official real-robot dataset (`RoboSynChallenge/cobotmagic_Real_<task>`, three
+480×640 cameras) as the observations and feedback, and reports the time to the first chunk, the
+reply time per chunk (serial: per step, with and without an inference) and the episode wall time.
+With `--ref <another checkout>` it runs the reference on the same observations with the same seed
+through the per-step `FeedbackBridge` and compares every action (`np.array_equal`) and, per
+inference, the model input (frame-history clip, qpos) and output chunk by sha256:
+
+```bash
+cd RoboSynChallenge   # OFI_PYTHON, OFI_SRC_ROOT and the weights as for eval.sh
+HF_HUB_OFFLINE=0 policy/act/.venv/bin/python policy/MyPolicy/tools/check_real_feedback.py \
+    --rsc_real <directory holding rsc_real/> --task handle_basket --ref <checkout of dffad646>
+```
+Without an episode seed (as on the real bridge) the diffusion noise differs from run to run in
+any version, so the bitwise comparison uses a seed (default 0).
+
 ## Licenses
 
 - RoboActualizer (the OfI model code): MIT (`LICENSE` in the upstream checkout).
@@ -163,8 +208,9 @@ Both need a GPU for a meaningful number; CPU numbers only prove the path runs.
 | `action_post.py` | joint-limit clip, gripper 0–1 + optional switch, optional step limit, counters and log (numpy only) |
 | `backends/ofi.py` | One-from-Infinity model backend (finds the task checkpoint) |
 | `backends/hold.py` | holds the current pose; tests only, not routed to any task |
-| `ofi/` | the model client, worker and checkpoint checks (unchanged from our preliminary submission) |
+| `ofi/` | the model client, worker and checkpoint checks (preliminary submission; the client's serving changed for the real station, see Timing) |
 | `tools/time_ofi.py` | inference timing: encoder / denoising / total |
 | `tools/time_e2e.py` | timing of the whole `policy/` path without the simulator |
+| `tools/check_real_feedback.py`, `tools/real_feedback_tap.py` | real-station check: organizers' feedback bridge, recorded real observations, reply times, bitwise comparison with another checkout |
 | `tests/test_skeleton.py` | CPU self-check |
 | `locks/` | pinned package versions |
